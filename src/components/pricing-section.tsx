@@ -129,6 +129,14 @@ function isEmailValid(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
+function translateList(values: string[], options: Record<string, string>) {
+  if (values.length === 0) {
+    return "-";
+  }
+
+  return values.map((value) => options[value] ?? value).join(", ");
+}
+
 function getFormUi(locale: Locale): FormUi {
   if (locale === "tr") {
     return {
