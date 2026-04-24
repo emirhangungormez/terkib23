@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { LegalDocument } from "@/components/legal-document";
 import { isLocale, locales, type Locale } from "@/lib/i18n";
 import { legalContent } from "@/lib/legal";
+import { buildPageMetadata } from "@/lib/site";
 
 type PageProps = {
   params: Promise<{ locale: string }>;
@@ -26,10 +27,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const locale = await getLocale(params);
   const doc = legalContent[locale].privacy;
 
-  return {
-    title: `${doc.title} | Terkib23`,
+  return buildPageMetadata({
+    locale,
+    slug: "/privacy-policy/",
+    title: doc.title,
     description: doc.description
-  };
+  });
 }
 
 export default async function PrivacyPolicyPage({ params }: PageProps) {

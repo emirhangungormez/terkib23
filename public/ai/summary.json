@@ -1,0 +1,16 @@
+{
+  "name": "Terkib23",
+  "url": "https://terkib23.emirhangungormez.com.tr",
+  "description": "Multilingual website design and development studio for Turkey and Europe.",
+  "services": [
+    "Multilingual websites",
+    "Landing pages",
+    "Corporate websites",
+    "Static site delivery",
+    "Offer and contact flow setup"
+  ],
+  "languages": ["tr", "de", "en", "ar"],
+  "contact": {
+    "email": "han23studio@gmail.com"
+  }
+}

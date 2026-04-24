@@ -1,0 +1,10 @@
+{
+  "service": {
+    "name": "Multilingual website design and development",
+    "provider": "Terkib23",
+    "serviceArea": ["Turkey", "Germany", "Europe"],
+    "delivery": "Remote",
+    "technologies": ["Next.js", "TypeScript", "Cloudflare Pages"],
+    "contactEmail": "han23studio@gmail.com"
+  }
+}

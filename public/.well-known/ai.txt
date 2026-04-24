@@ -1,0 +1,5 @@
+site: https://terkib23.emirhangungormez.com.tr
+name: Terkib23
+summary: Multilingual website design and development studio for Turkey and Europe.
+contact: mailto:han23studio@gmail.com
+llms: https://terkib23.emirhangungormez.com.tr/llms.txt

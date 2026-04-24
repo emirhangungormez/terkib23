@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Noto_Sans_Arabic, Space_Grotesk } from "next/font/google";
+import { siteName, siteUrl } from "@/lib/site";
 import "./globals.css";
 
 const inter = Inter({
@@ -21,11 +22,21 @@ const notoSansArabic = Noto_Sans_Arabic({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://terkib23.com"),
-  title: "Terkib23",
-  description: "Multilingual web production for Turkey and Europe.",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: siteName,
+    template: `%s | ${siteName}`
+  },
+  description: "Multilingual website design and development for Turkey and Europe.",
   icons: {
     icon: "/favicon.svg"
+  },
+  openGraph: {
+    siteName,
+    type: "website"
+  },
+  twitter: {
+    card: "summary_large_image"
   }
 };
 

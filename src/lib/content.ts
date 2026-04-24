@@ -227,7 +227,7 @@ const revisionTemplate: Record<Locale, RevisionItem[]> = {
 export const content: Record<Locale, SiteContent> = {
   tr: {
     meta: {
-      title: "Terkib23 | Çok Dilli Web Ajansı",
+      title: "Terkib23",
       description: "Türkiye ve Avrupa için çok dilli, hızlı ve profesyonel web siteleri."
     },
     nav: [
@@ -278,7 +278,7 @@ export const content: Record<Locale, SiteContent> = {
   },
   de: {
     meta: {
-      title: "Terkib23 | Mehrsprachige Webagentur",
+      title: "Terkib23",
       description: "Mehrsprachige, schnelle und professionelle Websites für die Türkei und Europa."
     },
     nav: [
@@ -329,7 +329,7 @@ export const content: Record<Locale, SiteContent> = {
   },
   en: {
     meta: {
-      title: "Terkib23 | Multilingual Web Agency",
+      title: "Terkib23",
       description: "Fast, multilingual and professional websites for Turkey and Europe."
     },
     nav: [
@@ -380,7 +380,7 @@ export const content: Record<Locale, SiteContent> = {
   },
   ar: {
     meta: {
-      title: "Terkib23 | وكالة مواقع متعددة اللغات",
+      title: "Terkib23",
       description: "مواقع سريعة واحترافية متعددة اللغات لتركيا وأوروبا."
     },
     nav: [

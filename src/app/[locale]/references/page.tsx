@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { SeoJsonLd } from "@/components/seo-json-ld";
 import { localeLabels, localeNames, locales, isLocale, type Locale } from "@/lib/i18n";
 import { content } from "@/lib/content";
 import { getLegalLinks } from "@/lib/legal";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { absoluteUrl, breadcrumbSchema, buildPageMetadata } from "@/lib/site";
 
 type PageProps = {
   params: Promise<{ locale: string }>;
@@ -107,10 +109,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const locale = await getLocale(params);
   const page = content[locale];
 
-  return {
-    title: `${page.referencesPage.title} | Terkib23`,
-    description: page.referencesPage.intro
-  };
+  return buildPageMetadata({
+    locale,
+    slug: "/references/",
+    title: page.referencesPage.title,
+    description: page.referencesPage.intro,
+    keywords: ["web design references", "portfolio", "case studies", "multilingual websites"]
+  });
 }
 
 function pageUi(locale: Locale) {
@@ -169,6 +174,10 @@ export default async function ReferencesPage({ params }: PageProps) {
   const locale = await getLocale(params);
   const page = content[locale];
   const ui = pageUi(locale);
+  const breadcrumbs = breadcrumbSchema([
+    { name: "Terkib23", url: absoluteUrl(`/${locale}/`) },
+    { name: page.referencesPage.title, url: absoluteUrl(`/${locale}/references/`) }
+  ]);
   const languageOptions = locales
     .filter((item) => item !== locale)
     .map((item) => ({
@@ -225,8 +234,10 @@ export default async function ReferencesPage({ params }: PageProps) {
   ];
 
   return (
-    <main className="home-shell" id="top">
-      <section className="home-canvas home-canvas-compact">
+    <>
+      <SeoJsonLd data={breadcrumbs} />
+      <main className="home-shell" id="top">
+        <section className="home-canvas home-canvas-compact">
         <div className="home-topbar" dir="ltr">
           <Link href={`/${locale}/`} className="home-brand" aria-label="Terkib23 home">
             <span className="home-brand-mark" aria-hidden="true">
@@ -262,70 +273,71 @@ export default async function ReferencesPage({ params }: PageProps) {
             <span className="home-stripe home-stripe-wine" />
           </div>
         </div>
-      </section>
+        </section>
 
-      <section className="home-info-band">
-        <div className="home-info-shell">
-          <div className="home-copy max-w-none pb-10">
-            <h2>{page.referencesPage.title}</h2>
-          </div>
+        <section className="home-info-band">
+          <div className="home-info-shell">
+            <div className="home-copy max-w-none pb-10">
+              <h2>{page.referencesPage.title}</h2>
+            </div>
 
-          <div className="home-info-stack">
-            {referenceSites.map((site, index) => (
-              <article key={site.name} className="home-info-card">
-                <div className="home-info-question">
-                  <h3>
-                    <a href={site.href} target="_blank" rel="noreferrer" className="reference-title-link">
-                      {site.name}
-                    </a>
-                  </h3>
-                  <span aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
-                </div>
-                <p className="home-info-text">{site.note[locale]}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <footer id="footer" className="home-footer" dir="ltr">
-        <div className="home-footer-shell">
-          <div className="home-footer-hero">
-            <h2>{ui.footerCta}</h2>
-            <a href={`mailto:${page.contact.email}`} className="home-footer-mail">
-              {page.contact.email}
-            </a>
-          </div>
-
-          <div className="home-footer-links">
-            {footerLinks.map((group) => (
-              <div key={group.title} className="home-footer-column">
-                <h3>{group.title}</h3>
-                <div className="home-footer-list">
-                  {group.items.map((item) => (
-                    <Link
-                      key={`${group.title}-${item.href}-${item.label}`}
-                      href={item.href}
-                      target={item.href.startsWith("http") ? "_blank" : undefined}
-                      rel={item.href.startsWith("http") ? "noreferrer" : undefined}
-                    >
-                      {item.label}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="home-footer-bottom">
-            <div className="home-footer-wordmark">TERKIB23</div>
-            <div className="home-footer-meta">
-              <a href="#top">{ui.footerBackToTop} ↑</a>
-              <p>{ui.footerCopyright}</p>
+            <div className="home-info-stack">
+              {referenceSites.map((site, index) => (
+                <article key={site.name} className="home-info-card">
+                  <div className="home-info-question">
+                    <h3>
+                      <a href={site.href} target="_blank" rel="noreferrer" className="reference-title-link">
+                        {site.name}
+                      </a>
+                    </h3>
+                    <span aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+                  </div>
+                  <p className="home-info-text">{site.note[locale]}</p>
+                </article>
+              ))}
             </div>
           </div>
-        </div>
-      </footer>
-    </main>
+        </section>
+
+        <footer id="footer" className="home-footer" dir="ltr">
+          <div className="home-footer-shell">
+            <div className="home-footer-hero">
+              <h2>{ui.footerCta}</h2>
+              <a href={`mailto:${page.contact.email}`} className="home-footer-mail">
+                {page.contact.email}
+              </a>
+            </div>
+
+            <div className="home-footer-links">
+              {footerLinks.map((group) => (
+                <div key={group.title} className="home-footer-column">
+                  <h3>{group.title}</h3>
+                  <div className="home-footer-list">
+                    {group.items.map((item) => (
+                      <Link
+                        key={`${group.title}-${item.href}-${item.label}`}
+                        href={item.href}
+                        target={item.href.startsWith("http") ? "_blank" : undefined}
+                        rel={item.href.startsWith("http") ? "noreferrer" : undefined}
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="home-footer-bottom">
+              <div className="home-footer-wordmark">TERKIB23</div>
+              <div className="home-footer-meta">
+                <a href="#top">{ui.footerBackToTop} ↑</a>
+                <p>{ui.footerCopyright}</p>
+              </div>
+            </div>
+          </div>
+        </footer>
+      </main>
+    </>
   );
 }

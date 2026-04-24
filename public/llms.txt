@@ -1,0 +1,27 @@
+# Terkib23
+
+> Multilingual website design and development studio serving Turkey and Europe.
+
+## Primary Pages
+
+- https://terkib23.emirhangungormez.com.tr/tr/
+- https://terkib23.emirhangungormez.com.tr/de/
+- https://terkib23.emirhangungormez.com.tr/en/
+- https://terkib23.emirhangungormez.com.tr/ar/
+
+## Commercial Pages
+
+- https://terkib23.emirhangungormez.com.tr/tr/packages/
+- https://terkib23.emirhangungormez.com.tr/tr/references/
+
+## Capabilities
+
+- Multilingual websites
+- Landing pages
+- Corporate websites
+- Static delivery on Cloudflare Pages
+- Contact and offer flow setup
+
+## Contact
+
+- Email: han23studio@gmail.com
