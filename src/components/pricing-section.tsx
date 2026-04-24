@@ -49,8 +49,12 @@ type FormUi = {
   notePlaceholder: string;
   pickOne: string;
   submit: string;
+  sending: string;
   normalResult: string;
   customResult: string;
+  successMessage: string;
+  fallbackSuccessMessage: string;
+  errorMessage: string;
   purposeOptions: Record<string, string>;
   sections: Record<string, string>;
   trafficOptions: Record<string, string>;
@@ -137,6 +141,10 @@ function translateList(values: string[], options: Record<string, string>) {
   return values.map((value) => options[value] ?? value).join(", ");
 }
 
+function toLocalizedLabel(value: string, options: Record<string, string>) {
+  return value ? options[value] ?? value : "-";
+}
+
 function getFormUi(locale: Locale): FormUi {
   if (locale === "tr") {
     return {
@@ -163,9 +171,13 @@ function getFormUi(locale: Locale): FormUi {
       noteLabel: "Özel talepler",
       notePlaceholder: "Kısaca ihtiyacınızı anlatın",
       pickOne: "Seçin",
-      submit: "Mail gönder",
+      submit: "Formu gönder",
+      sending: "Gönderiliyor...",
       normalResult: "Seçimleriniz mevcut paket yapımıza uygun görünüyor. İsterseniz uygun paketi netleştirip mail hazırlayalım.",
       customResult: "Fiyat paketleri sisteminize uygun görünmüyor. Size özel fiyat çıkarılması planlanıyor. Mail gönderilsin mi?",
+      successMessage: "Talebiniz başarıyla gönderildi. En kısa sürede dönüş yapacağız.",
+      fallbackSuccessMessage: "Talebiniz gönderildi. Eğer ilk FormSubmit doğrulama maili gelirse bir kez onaylamanız gerekir; sonrasında iletiler doğrudan ulaşır.",
+      errorMessage: "Gönderim sırasında bir sorun oluştu. Lütfen tekrar deneyin veya doğrudan e-posta ile iletişime geçin.",
       purposeOptions: {
         leads: "Yeni müşteri kazanmak",
         image: "Kurumsal görünüm",
@@ -229,9 +241,13 @@ function getFormUi(locale: Locale): FormUi {
       noteLabel: "Spezielle Anforderungen",
       notePlaceholder: "Beschreiben Sie kurz Ihren Bedarf",
       pickOne: "Wählen Sie",
-      submit: "Mail senden",
+      submit: "Formular senden",
+      sending: "Wird gesendet...",
       normalResult: "Ihre Auswahl wirkt passend zu unserer aktuellen Paketstruktur. Wenn Sie möchten, bereiten wir die passende Anfrage-Mail vor.",
       customResult: "Die Paketpreise scheinen für Ihr System nicht passend zu sein. Für Sie wird ein individuelles Angebot vorbereitet. Soll die Mail gesendet werden?",
+      successMessage: "Ihre Anfrage wurde erfolgreich gesendet. Wir melden uns so schnell wie möglich zurück.",
+      fallbackSuccessMessage: "Ihre Anfrage wurde gesendet. Falls eine erste FormSubmit-Bestätigung eintrifft, müssen Sie diese einmal freigeben; danach gehen neue Anfragen direkt ein.",
+      errorMessage: "Beim Senden ist ein Problem aufgetreten. Bitte versuchen Sie es erneut oder schreiben Sie uns direkt per E-Mail.",
       purposeOptions: {
         leads: "Neue Kunden gewinnen",
         image: "Unternehmensauftritt",
@@ -295,9 +311,13 @@ function getFormUi(locale: Locale): FormUi {
       noteLabel: "طلبات خاصة",
       notePlaceholder: "اشرح احتياجك باختصار",
       pickOne: "اختر",
-      submit: "إرسال البريد",
+      submit: "إرسال النموذج",
+      sending: "جارٍ الإرسال...",
       normalResult: "اختياراتك تبدو مناسبة لهيكل باقاتنا الحالي. يمكننا تجهيز رسالة الطلب المناسبة.",
       customResult: "يبدو أن الباقات الحالية لا تناسب نظامك بالكامل. سنخطط لك عرضاً مخصصاً. هل نرسل البريد؟",
+      successMessage: "تم إرسال الطلب بنجاح. سنعود إليكم في أقرب وقت ممكن.",
+      fallbackSuccessMessage: "تم إرسال الطلب. إذا وصلت رسالة تأكيد أولى من FormSubmit فقد تحتاجون إلى تأكيدها مرة واحدة فقط، وبعدها تصل الطلبات التالية مباشرة.",
+      errorMessage: "حدثت مشكلة أثناء الإرسال. حاول مرة أخرى أو تواصل معنا مباشرة عبر البريد الإلكتروني.",
       purposeOptions: {
         leads: "الحصول على عملاء جدد",
         image: "حضور مهني للعلامة",
@@ -360,9 +380,13 @@ function getFormUi(locale: Locale): FormUi {
     noteLabel: "Special requests",
     notePlaceholder: "Briefly describe what you need",
     pickOne: "Choose",
-    submit: "Send mail",
+    submit: "Send form",
+    sending: "Sending...",
     normalResult: "Your selections look compatible with our current package structure. We can prepare the matching inquiry email.",
     customResult: "The package prices do not seem suitable for your system. A custom quote is being planned for you. Send the email?",
+    successMessage: "Your request was sent successfully. We will get back to you as soon as possible.",
+    fallbackSuccessMessage: "Your request was sent. If FormSubmit sends an initial verification email, you only need to confirm it once and future submissions will arrive directly.",
+    errorMessage: "There was a problem while sending the form. Please try again or contact us directly by email.",
     purposeOptions: {
       leads: "Generate new customers",
       image: "Corporate presence",
@@ -413,6 +437,8 @@ export function PricingSection({
   const [showDiscount, setShowDiscount] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [showOptional, setShowOptional] = useState(false);
+  const [submitState, setSubmitState] = useState<"idle" | "submitting" | "success" | "error">("idle");
+  const [deliveryMode, setDeliveryMode] = useState<"native" | "fallback" | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     company: "",
@@ -482,10 +508,10 @@ export function PricingSection({
     isEmailValid(formData.email.trim()) &&
     Boolean(formData.projectPurpose);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!isReadyForResult) {
+    if (!isReadyForResult || submitState === "submitting") {
       return;
     }
 
@@ -510,30 +536,92 @@ export function PricingSection({
               ? "Custom quote request"
               : "Package-compatible quote request";
 
-    const body = [
-      `${formUi.name}: ${safeName}`,
-      `${formUi.company}: ${safeCompany}`,
-      `${formUi.email}: ${safeEmail}`,
-      `${formUi.purposeTitle}: ${
-        formData.projectPurpose
-          ? formUi.purposeOptions[formData.projectPurpose as keyof typeof formUi.purposeOptions] ?? formData.projectPurpose
-          : "-"
-      }`,
-      `${formUi.websiteType}: ${formData.websiteType
-        ? formUi.sections[formData.websiteType as keyof typeof formUi.sections] ?? formData.websiteType
-        : "-"}`,
-      `${formUi.traffic}: ${formData.traffic
-        ? formUi.trafficOptions[formData.traffic as keyof typeof formUi.trafficOptions] ?? formData.traffic
-        : "-"}`,
-      `${formUi.pageCount}: ${formData.pageCount
-        ? formUi.pageOptions[formData.pageCount as keyof typeof formUi.pageOptions] ?? formData.pageCount
-        : "-"}`,
-      `${formUi.languages}: ${translateList(formData.languages, formUi.languageOptions)}`,
-      `${formUi.modules}: ${translateList(formData.modules, formUi.moduleOptions)}`,
-      `${formUi.noteLabel}: ${safeNote || "-"}`
-    ].join("\n");
+    const payload = new FormData();
+    payload.append("_subject", subject);
+    payload.append("_template", "table");
+    payload.append("_replyto", safeEmail);
+    payload.append("_honey", "");
+    payload.append("name", safeName);
+    payload.append("company", safeCompany);
+    payload.append("email", safeEmail);
+    payload.append("locale", locale);
+    payload.append("project_type", isCustomFlow ? "custom" : "package-fit");
+    payload.append("project_purpose", toLocalizedLabel(formData.projectPurpose, formUi.purposeOptions));
+    payload.append("website_type", toLocalizedLabel(formData.websiteType, formUi.sections));
+    payload.append("traffic", toLocalizedLabel(formData.traffic, formUi.trafficOptions));
+    payload.append("page_count", toLocalizedLabel(formData.pageCount, formUi.pageOptions));
+    payload.append("languages", translateList(formData.languages, formUi.languageOptions));
+    payload.append("modules", translateList(formData.modules, formUi.moduleOptions));
+    payload.append("note", safeNote || "-");
 
-    window.location.assign(`mailto:${contactEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
+    try {
+      setSubmitState("submitting");
+      setDeliveryMode(null);
+
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json"
+        },
+        body: JSON.stringify({
+          name: safeName,
+          company: safeCompany,
+          email: safeEmail,
+          locale,
+          projectType: isCustomFlow ? "custom" : "package-fit",
+          projectPurpose: toLocalizedLabel(formData.projectPurpose, formUi.purposeOptions),
+          websiteType: toLocalizedLabel(formData.websiteType, formUi.sections),
+          traffic: toLocalizedLabel(formData.traffic, formUi.trafficOptions),
+          pageCount: toLocalizedLabel(formData.pageCount, formUi.pageOptions),
+          languages: translateList(formData.languages, formUi.languageOptions),
+          modules: translateList(formData.modules, formUi.moduleOptions),
+          note: safeNote || "-"
+        })
+      });
+
+      if (!response.ok) {
+        const shouldFallback = response.status === 404 || response.status === 405 || response.status === 501 || response.status >= 500;
+
+        if (!shouldFallback) {
+          throw new Error(`Native form submission failed with status ${response.status}`);
+        }
+
+        const fallbackResponse = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(contactEmail)}`, {
+          method: "POST",
+          headers: {
+            Accept: "application/json"
+          },
+          body: payload
+        });
+
+        if (!fallbackResponse.ok) {
+          throw new Error(`Fallback form submission failed with status ${fallbackResponse.status}`);
+        }
+
+        setDeliveryMode("fallback");
+      } else {
+        setDeliveryMode("native");
+      }
+
+      setSubmitState("success");
+      setFormData({
+        name: "",
+        company: "",
+        email: "",
+        projectPurpose: "",
+        websiteType: "",
+        traffic: "",
+        pageCount: "",
+        languages: [],
+        modules: [],
+        note: ""
+      });
+      setShowOptional(false);
+    } catch {
+      setSubmitState("error");
+      setDeliveryMode(null);
+    }
   };
 
   return (
@@ -836,13 +924,21 @@ export function PricingSection({
                   {isReadyForResult ? (
                     <div className={`home-brief-result ${isCustomFlow ? "is-custom" : ""}`}>
                       <p>{isCustomFlow ? formUi.customResult : formUi.normalResult}</p>
-                      <button type="submit">{formUi.submit}</button>
+                      <button type="submit" disabled={submitState === "submitting"}>
+                        {submitState === "submitting" ? formUi.sending : formUi.submit}
+                      </button>
                     </div>
                   ) : (
                     <button type="submit" className="home-brief-submit" disabled>
                       {formUi.submit}
                     </button>
                   )}
+                  {submitState === "success" ? (
+                    <p className="home-brief-helper">
+                      {deliveryMode === "fallback" ? formUi.fallbackSuccessMessage : formUi.successMessage}
+                    </p>
+                  ) : null}
+                  {submitState === "error" ? <p className="home-brief-helper">{formUi.errorMessage}</p> : null}
                 </section>
               </form>
             </div>
