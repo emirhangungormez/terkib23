@@ -76,6 +76,13 @@ function formatFields(payload: Required<ContactPayload>) {
   ];
 }
 
+function localeLabel(locale: string) {
+  if (locale === "tr") return "Turkish";
+  if (locale === "de") return "German";
+  if (locale === "ar") return "Arabic";
+  return "English";
+}
+
 async function sendWithResend(env: Env, payload: Required<ContactPayload>) {
   const to = sanitizeSingleLine(env.CONTACT_TO_EMAIL, 160);
   const from = sanitizeSingleLine(env.CONTACT_FROM_EMAIL, 160);
@@ -86,22 +93,50 @@ async function sendWithResend(env: Env, payload: Required<ContactPayload>) {
   }
 
   const fields = formatFields(payload);
-  const text = fields.map(([label, value]) => `${label}: ${value}`).join("\n");
+  const summaryLine = `${payload.name} from ${payload.company} submitted a ${payload.projectType} enquiry.`;
+  const text = [
+    "New contact request from the Terkib23 website",
+    "",
+    summaryLine,
+    "",
+    ...fields.map(([label, value]) => `${label}: ${value}`),
+    "",
+    "You can reply directly to this email to continue the conversation."
+  ].join("\n");
   const html = `
-    <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111827">
-      <h2>New contact request</h2>
-      <table style="border-collapse:collapse;width:100%;max-width:720px">
-        <tbody>
-          ${fields
-            .map(
-              ([label, value]) =>
-                `<tr><td style="padding:8px;border:1px solid #e5e7eb;font-weight:700;width:180px">${escapeHtml(
-                  label
-                )}</td><td style="padding:8px;border:1px solid #e5e7eb">${escapeHtml(value)}</td></tr>`
-            )
-            .join("")}
-        </tbody>
-      </table>
+    <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111827;background:#f5f1eb;padding:24px">
+      <div style="max-width:760px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden">
+        <div style="background:#1f2937;color:#f9fafb;padding:24px 28px">
+          <p style="margin:0 0 8px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#d1d5db">Terkib23 Website Lead</p>
+          <h1 style="margin:0;font-size:26px;line-height:1.2">New contact request</h1>
+          <p style="margin:10px 0 0;font-size:15px;color:#e5e7eb">${escapeHtml(summaryLine)}</p>
+        </div>
+        <div style="padding:24px 28px">
+          <p style="margin:0 0 16px;font-size:15px;color:#374151">
+            A visitor filled out the pricing/contact form on the website. You can reply directly to this email to continue the conversation with
+            <strong>${escapeHtml(payload.name)}</strong>.
+          </p>
+          <div style="margin:0 0 20px;padding:14px 16px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;font-size:14px;color:#4b5563">
+            <strong style="color:#111827">Quick summary:</strong>
+            ${escapeHtml(payload.projectPurpose)} | ${escapeHtml(payload.projectType)} | ${escapeHtml(localeLabel(payload.locale))}
+          </div>
+          <table style="border-collapse:collapse;width:100%;max-width:720px;font-size:14px">
+            <tbody>
+              ${fields
+                .map(
+                  ([label, value]) =>
+                    `<tr><td style="padding:10px 12px;border:1px solid #e5e7eb;font-weight:700;width:190px;background:#faf7f2">${escapeHtml(
+                      label
+                    )}</td><td style="padding:10px 12px;border:1px solid #e5e7eb">${escapeHtml(value)}</td></tr>`
+                )
+                .join("")}
+            </tbody>
+          </table>
+        </div>
+        <div style="padding:18px 28px;border-top:1px solid #e5e7eb;background:#fcfcfd;font-size:13px;color:#6b7280">
+          This message was sent automatically from the Terkib23 contact form.
+        </div>
+      </div>
     </div>
   `;
 
@@ -115,7 +150,7 @@ async function sendWithResend(env: Env, payload: Required<ContactPayload>) {
     body: JSON.stringify({
       from,
       to: [to],
-      subject: `New lead from ${payload.name}`,
+      subject: `New website enquiry from ${payload.name}`,
       html,
       text,
       reply_to: payload.email
